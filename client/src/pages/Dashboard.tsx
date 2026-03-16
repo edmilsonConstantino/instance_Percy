@@ -324,43 +324,81 @@ export default function Dashboard() {
                 Feed de Atividades
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 overflow-hidden relative">
-              <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-gray-100"></div>
-              <div className="space-y-6 relative">
-                {notifications.slice(0, 4).map((notif, idx) => (
-                  <div key={notif.id} className="flex gap-4 items-start group">
-                    <div className={`relative z-10 mt-1 h-3 w-3 rounded-full shrink-0 ring-4 ring-white transition-all duration-300 group-hover:scale-125 ${
-                      notif.type === 'warning' ? 'bg-yellow-500' : 
-                      notif.type === 'success' ? 'bg-green-500' : 
+            <CardContent className="flex-1 relative p-0">
+              <div className="overflow-y-auto max-h-[420px] px-6 py-2 space-y-1">
+                {/* Notificações recentes */}
+                {notifications.slice(0, 3).map((notif) => (
+                  <div key={notif.id} className="flex gap-3 items-start group py-2 border-b border-gray-50 last:border-0">
+                    <div className={`mt-1.5 h-2.5 w-2.5 rounded-full shrink-0 ring-2 ring-white ${
+                      notif.type === 'warning' ? 'bg-yellow-500' :
+                      notif.type === 'success' ? 'bg-green-500' :
                       notif.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
                     }`} />
-                    <div className="space-y-1 bg-gray-50/50 p-3 rounded-lg flex-1 transition-colors group-hover:bg-gray-100">
-                      <p className="text-sm font-medium leading-snug text-gray-800">{notif.message}</p>
-                      <p className="text-xs text-muted-foreground font-mono">
-                        {format(new Date(notif.createdAt), "HH:mm", { locale: ptBR })}
-                      </p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium leading-snug text-gray-800 truncate">{notif.message}</p>
+                      <p className="text-xs text-muted-foreground">{format(new Date(notif.createdAt), "HH:mm", { locale: ptBR })}</p>
                     </div>
                   </div>
                 ))}
-                
-                {sales.slice(0, 3).map((sale) => (
-                  <div key={sale.id} className="flex gap-4 items-start group">
-                    <div className="relative z-10 mt-1 h-3 w-3 rounded-full shrink-0 bg-primary ring-4 ring-white transition-all duration-300 group-hover:scale-125" />
-                    <div className="space-y-1 bg-gray-50/50 p-3 rounded-lg flex-1 transition-colors group-hover:bg-gray-100">
-                      <div className="flex justify-between items-start">
-                        <p className="text-sm font-medium text-gray-800">Venda #{sale.id.slice(-4)}</p>
-                        <span className="text-xs font-bold text-primary bg-primary/10 px-1.5 rounded">{formatCurrency(parseFloat(sale.total))}</span>
+
+                {/* Vendas dos últimos 2 dias agrupadas */}
+                {(() => {
+                  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+                  const yesterdayStart = subDays(todayStart, 1);
+                  const twoDaysAgoStart = subDays(todayStart, 2);
+
+                  const recentSales = sales
+                    .filter(s => new Date(s.createdAt) >= twoDaysAgoStart)
+                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+                  if (recentSales.length === 0) return (
+                    <p className="text-xs text-muted-foreground text-center py-4">Nenhuma venda nos últimos 2 dias</p>
+                  );
+
+                  const paymentLabel = (m: string) => {
+                    if (m === 'card') return 'Cartão';
+                    if (m === 'pix' || m === 'mpesa') return 'M-Pesa';
+                    if (m === 'emola') return 'e-Mola';
+                    return 'Dinheiro';
+                  };
+
+                  let lastGroup = '';
+                  return recentSales.map((sale) => {
+                    const saleDate = new Date(sale.createdAt); saleDate.setHours(0,0,0,0);
+                    let group = saleDate.getTime() === todayStart.getTime() ? 'Hoje'
+                      : saleDate.getTime() === yesterdayStart.getTime() ? 'Ontem'
+                      : format(saleDate, 'dd/MM', { locale: ptBR });
+                    const showHeader = group !== lastGroup;
+                    lastGroup = group;
+                    return (
+                      <div key={sale.id}>
+                        {showHeader && (
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pt-3 pb-1">{group}</p>
+                        )}
+                        <div className="flex gap-3 items-start group py-2 border-b border-gray-50 last:border-0">
+                          <div className="mt-1.5 h-2.5 w-2.5 rounded-full shrink-0 ring-2 ring-white bg-primary" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-center gap-2">
+                              <p className="text-sm font-medium text-gray-800">Venda #{sale.id.slice(-4)}</p>
+                              <span className="text-xs font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">
+                                {formatCurrency(parseFloat(sale.total))}
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {sale.items.length} {sale.items.length === 1 ? 'item' : 'itens'} • {paymentLabel(sale.paymentMethod ?? '')} • {format(new Date(sale.createdAt), "HH:mm", { locale: ptBR })}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {sale.items.length} itens • {sale.paymentMethod === 'card' ? 'Cartão' : 'Dinheiro'}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                    );
+                  });
+                })()}
               </div>
             </CardContent>
             <div className="p-4 border-t border-gray-100 bg-gray-50/50 rounded-b-xl">
-              <Button variant="ghost" className="w-full text-primary text-sm hover:bg-primary/5">Ver todo o histórico</Button>
+              <Link href="/reports">
+                <Button variant="ghost" className="w-full text-primary text-sm hover:bg-primary/5">Ver todo o histórico</Button>
+              </Link>
             </div>
           </Card>
         </div>

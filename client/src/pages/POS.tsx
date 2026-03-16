@@ -242,7 +242,7 @@ export default function POS() {
       {/* MOBILE: Abas */}
       <div className="lg:hidden">
         <div className="flex gap-2 mb-4">
-          <Button 
+          <Button
             variant="outline"
             className="flex-1 rounded-xl bg-gradient-to-r from-emerald-50 to-emerald-100 border-emerald-200 hover:bg-emerald-100"
             onClick={() => setSelectedCategory(cart.length > 0 ? 'all' : selectedCategory)}
@@ -252,135 +252,143 @@ export default function POS() {
             Produtos
           </Button>
           {cart.length > 0 && (
-            <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  variant="default"
-                  className="flex-1 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg"
-                  data-testid="button-tab-carrinho"
-                >
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  Carrinho ({cartCount})
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl h-[90vh] flex flex-col p-0 gap-0">
-                <DialogHeader className="px-4 pt-4 pb-3 border-b shrink-0">
-                  <DialogTitle className="text-xl font-bold">Carrinho ({cart.length})</DialogTitle>
-                </DialogHeader>
-
-                <div className="flex-1 overflow-y-auto px-4 py-3">
-                  {cart.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <ShoppingBag className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>Carrinho vazio</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {cart.map((item) => {
-                        const product = products.find(p => p.id === item.productId);
-                        if (!product) return null;
-                        return (
-                          <div key={item.productId} className="p-4 bg-gradient-to-r from-emerald-50 to-orange-50 rounded-lg border-2 border-orange-200 shadow-sm">
-                            <div className="flex gap-4 mb-3">
-                              <div className="h-20 w-20 rounded-md overflow-hidden shrink-0 flex items-center justify-center border-2 border-orange-200">
-                                {product.image ? (
-                                  <img src={product.image} alt="" className="h-full w-full object-cover" />
-                                ) : (
-                                  <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600 font-bold text-2xl">
-                                    {product.name.charAt(0).toUpperCase()}
-                                  </div>
-                                )}
-                              </div>
-                              <div className="flex-1">
-                                <h4 className="text-base font-bold text-gray-800">{product.name}</h4>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  <span className="font-bold text-orange-600 text-lg">{formatCurrency(item.priceAtSale)}</span>
-                                </p>
-                                <p className="text-sm font-semibold text-orange-600 mt-2">
-                                  Total: {formatCurrency(item.priceAtSale * item.quantity)}
-                                </p>
-                              </div>
-                            </div>
-                            
-                            <div className="bg-white rounded-lg p-3 border border-orange-100">
-                              <p className="text-xs text-muted-foreground mb-3">Editar Quantidade ({product.unit})</p>
-                              <div className="flex items-center justify-between gap-2 mb-3">
-                                <button 
-                                  className="h-12 px-4 flex items-center justify-center rounded-lg bg-red-500 hover:bg-red-600 text-white font-bold transition-colors shadow-md active:scale-95"
-                                  onClick={() => handleQuantityChange(item.productId, -1)}
-                                  data-testid={`button-decrease-mobile-${item.productId}`}
-                                >
-                                  <Minus className="h-6 w-6" />
-                                </button>
-                                <Input
-                                  type="number"
-                                  step={product.unit === 'kg' ? '0.1' : product.unit === 'g' ? '1' : '1'}
-                                  value={item.quantity.toFixed(product.unit === 'kg' ? 1 : product.unit === 'g' ? 0 : 0)}
-                                  onChange={(e) => {
-                                    const newQty = parseFloat(e.target.value) || 0;
-                                    if (newQty > 0) {
-                                      updateCartQuantity(item.productId, newQty);
-                                    }
-                                  }}
-                                  className="flex-1 h-12 text-center text-xl font-bold border-2 border-orange-300 bg-orange-50 text-orange-600"
-                                  data-testid={`input-quantity-${item.productId}`}
-                                />
-                                <button 
-                                  className="h-12 px-4 flex items-center justify-center rounded-lg bg-green-500 hover:bg-green-600 text-white font-bold transition-colors shadow-md active:scale-95"
-                                  onClick={() => handleQuantityChange(item.productId, 1)}
-                                  data-testid={`button-increase-mobile-${item.productId}`}
-                                >
-                                  <Plus className="h-6 w-6" />
-                                </button>
-                              </div>
-                              <button 
-                                className="w-full h-10 flex items-center justify-center rounded-lg bg-red-100 hover:bg-red-200 text-red-600 font-bold transition-colors border border-red-300 active:scale-95"
-                                onClick={() => removeFromCart(item.productId)}
-                                data-testid={`button-remove-mobile-${item.productId}`}
-                              >
-                                <Trash2 className="h-5 w-5 mr-2" /> Remover
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                {cart.length > 0 && (
-                  <div className="border-t px-4 py-3 space-y-3 shrink-0 bg-background">
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Subtotal</span>
-                        <span className="font-medium">{formatCurrency(subtotal)}</span>
-                      </div>
-                      {activeDiscount.type !== 'none' && (
-                        <div className="flex justify-between text-sm text-green-600">
-                          <span>Desconto</span>
-                          <span className="font-medium">-{formatCurrency(discountAmount)}</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between text-lg font-bold border-t pt-2">
-                        <span>Total</span>
-                        <span className="text-orange-600">{formatCurrency(cartTotal)}</span>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button variant="outline" onClick={() => clearCart()} data-testid="button-clear-mobile">
-                        <Trash2 className="h-4 w-4 mr-2" /> Limpar
-                      </Button>
-                      <Button className="bg-green-600 hover:bg-green-700" onClick={() => { setCheckoutOpen(false); openCheckout(); }} data-testid="button-checkout-mobile">
-                        Finalizar <ArrowRight className="h-4 w-4 ml-2" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </DialogContent>
-            </Dialog>
+            <Button
+              variant="default"
+              className="flex-1 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg"
+              onClick={() => setCheckoutOpen(true)}
+              data-testid="button-tab-carrinho"
+            >
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              Carrinho ({cartCount})
+            </Button>
           )}
         </div>
       </div>
+
+      {/* MOBILE: Dialog do Carrinho (fora do condicional cart.length > 0) */}
+      <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
+        <DialogContent className="max-w-2xl h-[90vh] flex flex-col p-0 gap-0 lg:hidden">
+          <DialogHeader className="px-4 pt-4 pb-3 border-b shrink-0">
+            <DialogTitle className="text-xl font-bold">Carrinho ({cart.length})</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto px-4 py-3">
+            {cart.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <ShoppingBag className="h-14 w-14 mx-auto mb-3 opacity-40" />
+                <p className="font-medium">Carrinho vazio</p>
+                <p className="text-sm mt-1">Adicione produtos para continuar</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {cart.map((item) => {
+                  const product = products.find(p => p.id === item.productId);
+                  if (!product) return null;
+                  return (
+                    <div key={item.productId} className="p-4 bg-gradient-to-r from-emerald-50 to-orange-50 rounded-lg border-2 border-orange-200 shadow-sm">
+                      <div className="flex gap-4 mb-3">
+                        <div className="h-20 w-20 rounded-md overflow-hidden shrink-0 flex items-center justify-center border-2 border-orange-200">
+                          {product.image ? (
+                            <img src={product.image} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600 font-bold text-2xl">
+                              {product.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-base font-bold text-gray-800">{product.name}</h4>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            <span className="font-bold text-orange-600 text-lg">{formatCurrency(item.priceAtSale)}</span>
+                          </p>
+                          <p className="text-sm font-semibold text-orange-600 mt-2">
+                            Total: {formatCurrency(item.priceAtSale * item.quantity)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="bg-white rounded-lg p-3 border border-orange-100">
+                        <p className="text-xs text-muted-foreground mb-3">Editar Quantidade ({product.unit})</p>
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                          <button
+                            type="button"
+                            className="h-12 px-4 flex items-center justify-center rounded-lg bg-red-500 hover:bg-red-600 text-white font-bold transition-colors shadow-md active:scale-95"
+                            onClick={(e) => { e.stopPropagation(); handleQuantityChange(item.productId, -1); }}
+                            data-testid={`button-decrease-mobile-${item.productId}`}
+                          >
+                            <Minus className="h-6 w-6" />
+                          </button>
+                          <Input
+                            type="number"
+                            step={product.unit === 'kg' ? '0.1' : '1'}
+                            value={item.quantity.toFixed(product.unit === 'kg' ? 1 : 0)}
+                            onChange={(e) => {
+                              const newQty = parseFloat(e.target.value) || 0;
+                              if (newQty > 0) updateCartQuantity(item.productId, newQty);
+                            }}
+                            className="flex-1 h-12 text-center text-xl font-bold border-2 border-orange-300 bg-orange-50 text-orange-600"
+                            data-testid={`input-quantity-${item.productId}`}
+                          />
+                          <button
+                            type="button"
+                            className="h-12 px-4 flex items-center justify-center rounded-lg bg-green-500 hover:bg-green-600 text-white font-bold transition-colors shadow-md active:scale-95"
+                            onClick={(e) => { e.stopPropagation(); handleQuantityChange(item.productId, 1); }}
+                            data-testid={`button-increase-mobile-${item.productId}`}
+                          >
+                            <Plus className="h-6 w-6" />
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          className="w-full h-10 flex items-center justify-center rounded-lg bg-red-100 hover:bg-red-200 text-red-600 font-bold transition-colors border border-red-300 active:scale-95"
+                          onClick={(e) => { e.stopPropagation(); removeFromCart(item.productId); }}
+                          data-testid={`button-remove-mobile-${item.productId}`}
+                        >
+                          <Trash2 className="h-5 w-5 mr-2" /> Remover
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t px-4 py-3 space-y-3 shrink-0 bg-background">
+            {cart.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="font-medium">{formatCurrency(subtotal)}</span>
+                </div>
+                {activeDiscount.type !== 'none' && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Desconto</span>
+                    <span className="font-medium">-{formatCurrency(discountAmount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-lg font-bold border-t pt-2">
+                  <span>Total</span>
+                  <span className="text-orange-600">{formatCurrency(cartTotal)}</span>
+                </div>
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" onClick={() => clearCart()} data-testid="button-clear-mobile">
+                <Trash2 className="h-4 w-4 mr-2" /> Limpar
+              </Button>
+              <Button
+                className="bg-green-600 hover:bg-green-700"
+                disabled={cart.length === 0}
+                onClick={() => { setCheckoutOpen(false); openCheckout(); }}
+                data-testid="button-checkout-mobile"
+              >
+                Finalizar <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Produtos - Desktop sempre, Mobile em aba */}
       <div className="flex-1 flex flex-col min-w-0 bg-card rounded-xl border border-border shadow-sm overflow-hidden lg:block">
@@ -446,60 +454,93 @@ export default function POS() {
                 const parsedMinStock = parseFloat(product.minStock);
                 const parsedPrice = parseFloat(product.price);
 
-                return (
-                  <div
-                    key={product.id}
-                    className={`flex items-center gap-3 px-3 py-2.5 bg-white rounded-2xl border border-gray-100 shadow-sm cursor-pointer transition-all ${parsedStock <= 0 ? 'opacity-50 pointer-events-none' : 'hover:border-emerald-200 hover:shadow-md active:scale-[0.98]'}`}
-                    onClick={() => parsedStock > 0 && handleAddProduct(product)}
-                    data-testid={`card-product-${product.id}`}
-                  >
-                    {/* Imagem / Inicial */}
-                    <div className="h-14 w-14 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100 relative overflow-hidden">
-                      {product.image ? (
-                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-emerald-600 text-2xl font-bold leading-none">
-                          {product.name.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                      {parsedStock <= 0 && (
-                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                          <span className="text-white text-[8px] font-bold">Esgotado</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm leading-tight truncate text-gray-800">{product.name}</h3>
-                      <span className="font-bold text-orange-500 text-base leading-tight">{formatCurrency(parsedPrice)}</span>
-                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                        <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-600">{product.unit}</span>
-                        {product.unit === 'kg' && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
-                            <Scale className="h-3 w-3" /> Pesável
+                {(() => {
+                  const cartItem = cart.find(i => i.productId === product.id);
+                  return (
+                    <div
+                      key={product.id}
+                      className={`flex items-center gap-3 px-3 py-2.5 bg-white rounded-2xl border shadow-sm transition-all ${parsedStock <= 0 ? 'opacity-50 pointer-events-none border-gray-100' : cartItem ? 'border-emerald-300 bg-emerald-50/40' : 'border-gray-100 hover:border-emerald-200 hover:shadow-md active:scale-[0.98] cursor-pointer'}`}
+                      onClick={() => !cartItem && parsedStock > 0 && handleAddProduct(product)}
+                      data-testid={`card-product-${product.id}`}
+                    >
+                      {/* Imagem / Inicial */}
+                      <div className="h-14 w-14 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100 relative overflow-hidden">
+                        {product.image ? (
+                          <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-emerald-600 text-2xl font-bold leading-none">
+                            {product.name.charAt(0).toUpperCase()}
                           </span>
                         )}
-                        {parsedStock <= parsedMinStock && parsedStock > 0 && (
-                          <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-medium text-orange-600">Pouco estoque</span>
+                        {parsedStock <= 0 && (
+                          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                            <span className="text-white text-[8px] font-bold">Esgotado</span>
+                          </div>
                         )}
-                        <span className="text-[10px] text-gray-400 ml-auto">
-                          Est: {parsedStock.toFixed(product.unit === 'kg' ? 3 : 0)}
-                        </span>
+                        {cartItem && (
+                          <div className="absolute top-0 right-0 h-5 w-5 bg-emerald-500 rounded-bl-lg flex items-center justify-center">
+                            <Check className="h-3 w-3 text-white" />
+                          </div>
+                        )}
                       </div>
-                    </div>
 
-                    {/* Botão + */}
-                    <button
-                      className="shrink-0 h-10 w-10 rounded-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 flex items-center justify-center shadow-md transition-colors disabled:opacity-40"
-                      onClick={(e) => { e.stopPropagation(); if (parsedStock > 0) handleAddProduct(product); }}
-                      disabled={parsedStock <= 0}
-                      data-testid={`button-add-${product.id}`}
-                    >
-                      <Plus className="h-5 w-5 text-white" />
-                    </button>
-                  </div>
-                );
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm leading-tight truncate text-gray-800">{product.name}</h3>
+                        <span className="font-bold text-orange-500 text-base leading-tight">{formatCurrency(parsedPrice)}</span>
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                          <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-600">{product.unit}</span>
+                          {product.unit === 'kg' && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                              <Scale className="h-3 w-3" /> Pesável
+                            </span>
+                          )}
+                          {parsedStock <= parsedMinStock && parsedStock > 0 && (
+                            <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-medium text-orange-600">Pouco estoque</span>
+                          )}
+                          <span className="text-[10px] text-gray-400 ml-auto">
+                            Est: {parsedStock.toFixed(product.unit === 'kg' ? 3 : 0)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Botão + ou controlo de quantidade */}
+                      {cartItem ? (
+                        <div className="shrink-0 flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            className="h-9 w-9 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-colors shadow-sm active:scale-95"
+                            onClick={() => handleQuantityChange(product.id, -1)}
+                            data-testid={`button-decrease-list-${product.id}`}
+                          >
+                            <Minus className="h-4 w-4 text-white" />
+                          </button>
+                          <span className="min-w-[32px] text-center text-sm font-bold text-emerald-700">
+                            {cartItem.quantity.toFixed(product.unit === 'kg' ? 1 : 0)}
+                          </span>
+                          <button
+                            type="button"
+                            className="h-9 w-9 rounded-full bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center transition-colors shadow-sm active:scale-95"
+                            onClick={() => handleQuantityChange(product.id, 1)}
+                            data-testid={`button-increase-list-${product.id}`}
+                          >
+                            <Plus className="h-4 w-4 text-white" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="shrink-0 h-10 w-10 rounded-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 flex items-center justify-center shadow-md transition-colors disabled:opacity-40"
+                          onClick={(e) => { e.stopPropagation(); if (parsedStock > 0) handleAddProduct(product); }}
+                          disabled={parsedStock <= 0}
+                          data-testid={`button-add-${product.id}`}
+                        >
+                          <Plus className="h-5 w-5 text-white" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
               })}
             </div>
           ) : (
@@ -509,51 +550,81 @@ export default function POS() {
                 const parsedMinStock = parseFloat(product.minStock);
                 const parsedPrice = parseFloat(product.price);
 
-                return (
-                  <Card 
-                    key={product.id} 
-                    className={`cursor-pointer transition-all hover:shadow-lg hover:border-primary/50 group ${parsedStock <= 0 ? 'opacity-50 pointer-events-none' : 'hover:scale-105 hover:-translate-y-1'} rounded-lg`}
-                    onClick={() => parsedStock > 0 && handleAddProduct(product)}
-                    data-testid={`card-product-${product.id}`}
-                  >
-                    <CardContent className="p-2 lg:p-3 space-y-2">
-                      <div className="aspect-square rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 relative overflow-hidden border border-emerald-200/50">
-                        {product.image ? (
-                          <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-emerald-600 text-4xl lg:text-5xl font-bold bg-emerald-50">
-                            {product.name.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                        {parsedStock <= parsedMinStock && parsedStock > 0 && (
-                          <Badge className="absolute top-2 right-2 text-[10px] px-1.5 h-5 bg-orange-500 hover:bg-orange-600">
-                            Pouco
-                          </Badge>
-                        )}
-                        {parsedStock <= 0 && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                            <span className="text-white font-bold text-sm">Sem Estoque</span>
-                          </div>
-                        )}
-                        {product.unit === 'kg' && (
-                          <Badge variant="secondary" className="absolute bottom-2 left-2 text-[10px] bg-white/90 backdrop-blur text-foreground border-none shadow-sm">
-                            <Scale className="h-3 w-3 mr-1" /> Pesável
-                          </Badge>
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-xs lg:text-sm leading-tight line-clamp-2 text-gray-800">{product.name}</h3>
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="font-bold text-orange-600 text-sm lg:text-base">{formatCurrency(parsedPrice)}</span>
-                          <Badge variant="outline" className="text-[10px]">{product.unit}</Badge>
+                {(() => {
+                  const cartItem = cart.find(i => i.productId === product.id);
+                  return (
+                    <Card
+                      key={product.id}
+                      className={`transition-all group rounded-lg ${parsedStock <= 0 ? 'opacity-50 pointer-events-none' : ''} ${cartItem ? 'border-emerald-400 shadow-md' : 'hover:shadow-lg hover:border-primary/50 hover:scale-105 hover:-translate-y-1 cursor-pointer'}`}
+                      onClick={() => !cartItem && parsedStock > 0 && handleAddProduct(product)}
+                      data-testid={`card-product-${product.id}`}
+                    >
+                      <CardContent className="p-2 lg:p-3 space-y-2">
+                        <div className="aspect-square rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 relative overflow-hidden border border-emerald-200/50">
+                          {product.image ? (
+                            <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-emerald-600 text-4xl lg:text-5xl font-bold bg-emerald-50">
+                              {product.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          {cartItem && (
+                            <div className="absolute inset-0 bg-emerald-500/10 flex items-end justify-center pb-2">
+                              <div className="bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                {cartItem.quantity.toFixed(product.unit === 'kg' ? 1 : 0)} {product.unit}
+                              </div>
+                            </div>
+                          )}
+                          {parsedStock <= parsedMinStock && parsedStock > 0 && (
+                            <Badge className="absolute top-2 right-2 text-[10px] px-1.5 h-5 bg-orange-500 hover:bg-orange-600">Pouco</Badge>
+                          )}
+                          {parsedStock <= 0 && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                              <span className="text-white font-bold text-sm">Sem Estoque</span>
+                            </div>
+                          )}
+                          {product.unit === 'kg' && (
+                            <Badge variant="secondary" className="absolute bottom-2 left-2 text-[10px] bg-white/90 backdrop-blur text-foreground border-none shadow-sm">
+                              <Scale className="h-3 w-3 mr-1" /> Pesável
+                            </Badge>
+                          )}
                         </div>
-                        <div className="text-[10px] text-emerald-600 font-semibold mt-1">
-                          Est: {parsedStock.toFixed(product.unit === 'kg' ? 3 : 0)}
+                        <div>
+                          <h3 className="font-bold text-xs lg:text-sm leading-tight line-clamp-2 text-gray-800">{product.name}</h3>
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="font-bold text-orange-600 text-sm lg:text-base">{formatCurrency(parsedPrice)}</span>
+                            <Badge variant="outline" className="text-[10px]">{product.unit}</Badge>
+                          </div>
+                          {cartItem ? (
+                            <div className="flex items-center justify-between mt-2 gap-1" onClick={e => e.stopPropagation()}>
+                              <button
+                                type="button"
+                                className="flex-1 h-7 rounded-lg bg-red-500 hover:bg-red-600 flex items-center justify-center transition-colors"
+                                onClick={() => handleQuantityChange(product.id, -1)}
+                              >
+                                <Minus className="h-3 w-3 text-white" />
+                              </button>
+                              <span className="flex-1 text-center text-xs font-bold text-emerald-700">
+                                {cartItem.quantity.toFixed(product.unit === 'kg' ? 1 : 0)}
+                              </span>
+                              <button
+                                type="button"
+                                className="flex-1 h-7 rounded-lg bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center transition-colors"
+                                onClick={() => handleQuantityChange(product.id, 1)}
+                              >
+                                <Plus className="h-3 w-3 text-white" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="text-[10px] text-emerald-600 font-semibold mt-1">
+                              Est: {parsedStock.toFixed(product.unit === 'kg' ? 3 : 0)}
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
+                      </CardContent>
+                    </Card>
+                  );
+                })()}
               })}
             </div>
           )}
@@ -874,14 +945,22 @@ export default function POS() {
                   {cart.map((item, idx) => {
                     const product = products.find(p => p.id === item.productId);
                     return (
-                      <div key={idx} className="flex justify-between items-start text-sm border-b border-dashed border-border pb-2 last:border-0">
-                        <div>
-                           <p className="font-medium">{product?.name}</p>
+                      <div key={idx} className="flex justify-between items-center text-sm border-b border-dashed border-border pb-2 last:border-0 gap-2">
+                        <div className="flex-1 min-w-0">
+                           <p className="font-medium truncate">{product?.name}</p>
                            <p className="text-xs text-muted-foreground">
                              {item.quantity.toFixed(product?.unit === 'kg' ? 3 : 0)}{product?.unit} x {formatCurrency(item.priceAtSale)}
                            </p>
                         </div>
-                        <span className="font-bold">{formatCurrency(item.quantity * item.priceAtSale)}</span>
+                        <span className="font-bold shrink-0">{formatCurrency(item.quantity * item.priceAtSale)}</span>
+                        <button
+                          type="button"
+                          className="shrink-0 p-1 rounded hover:bg-red-50 text-red-400 hover:text-red-600 transition-colors"
+                          onClick={() => removeFromCart(item.productId)}
+                          data-testid={`button-remove-checkout-${item.productId}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
                     );
                   })}
@@ -921,8 +1000,8 @@ export default function POS() {
               </div>
             </div>
 
-            <div className="space-y-4">
-              <Label>Método de Pagamento</Label>
+            <div className="space-y-3">
+              <Label className="block text-center font-semibold text-base">Método de Pagamento</Label>
               <div className="grid grid-cols-3 md:grid-cols-2 gap-2 md:gap-3">
                 <Button
                   variant="outline"

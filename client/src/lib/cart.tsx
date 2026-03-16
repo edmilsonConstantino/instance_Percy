@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Product } from './api';
 
 export interface CartItem {
@@ -16,10 +16,27 @@ interface CartContextType {
   getCartTotal: () => number;
 }
 
+const CART_STORAGE_KEY = 'pos_cart';
+
+function loadCartFromStorage(): CartItem[] {
+  try {
+    const saved = localStorage.getItem(CART_STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+}
+
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(loadCartFromStorage);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+    } catch {}
+  }, [cart]);
 
   const addToCart = (product: Product, quantity: number) => {
     const parsedStock = parseFloat(product.stock);
@@ -54,6 +71,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => {
     setCart([]);
+    try { localStorage.removeItem(CART_STORAGE_KEY); } catch {}
   };
 
   const getCartTotal = () => {

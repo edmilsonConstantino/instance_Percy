@@ -7,7 +7,7 @@ import { ptBR } from 'date-fns/locale';
 import { formatCurrency } from '@/lib/utils';
 import { useState } from 'react';
 import { DateRange } from "react-day-picker"
-import { Calendar as CalendarIcon, Download, TrendingUp, Users } from "lucide-react"
+import { Calendar as CalendarIcon, Download, TrendingUp, Users, ShoppingBag, Clock, TrendingDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -97,7 +97,16 @@ export default function Reports() {
     }
   };
 
-  const filteredSales = sales.filter(s => {
+  const isSeller = user?.role === 'seller';
+  const baseSales = isSeller ? sales.filter(s => s.userId === user?.id) : sales;
+
+  const today = new Date();
+  const todaySales = baseSales.filter(s => isSameDay(new Date(s.createdAt), today));
+  const yesterdaySales = baseSales.filter(s => isSameDay(new Date(s.createdAt), subDays(today, 1)));
+  const todayTotal = todaySales.reduce((acc, s) => acc + parseFloat(s.total), 0);
+  const yesterdayTotal = yesterdaySales.reduce((acc, s) => acc + parseFloat(s.total), 0);
+
+  const filteredSales = baseSales.filter(s => {
     if (!date?.from) return true;
     const saleDate = new Date(s.createdAt);
     const toDate = date.to || date.from;
@@ -171,7 +180,72 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+      {/* MOBILE: Resumo do vendedor — hoje e ontem */}
+      <div className="md:hidden space-y-4">
+        <div>
+          <h1 className="text-2xl font-heading font-bold text-foreground">Minhas Vendas</h1>
+          <p className="text-sm text-muted-foreground">Resumo do seu desempenho</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-4 text-white shadow-md">
+            <div className="flex items-center gap-2 mb-2 opacity-90">
+              <Clock className="h-4 w-4" />
+              <span className="text-xs font-medium">Hoje</span>
+            </div>
+            <p className="text-2xl font-bold">{formatCurrency(todayTotal)}</p>
+            <p className="text-xs opacity-80 mt-1">{todaySales.length} {todaySales.length === 1 ? 'venda' : 'vendas'}</p>
+          </div>
+          <div className="bg-gradient-to-br from-orange-400 to-orange-500 rounded-2xl p-4 text-white shadow-md">
+            <div className="flex items-center gap-2 mb-2 opacity-90">
+              <TrendingDown className="h-4 w-4" />
+              <span className="text-xs font-medium">Ontem</span>
+            </div>
+            <p className="text-2xl font-bold">{formatCurrency(yesterdayTotal)}</p>
+            <p className="text-xs opacity-80 mt-1">{yesterdaySales.length} {yesterdaySales.length === 1 ? 'venda' : 'vendas'}</p>
+          </div>
+        </div>
+
+        {/* Lista de vendas recentes (mobile) */}
+        <div className="bg-card border rounded-2xl overflow-hidden">
+          <div className="px-4 py-3 border-b bg-muted/30">
+            <p className="font-semibold text-sm flex items-center gap-2">
+              <ShoppingBag className="h-4 w-4 text-primary" />
+              Vendas Recentes
+            </p>
+          </div>
+          <div className="divide-y">
+            {baseSales.length === 0 ? (
+              <div className="py-8 text-center text-muted-foreground text-sm">Nenhuma venda registada</div>
+            ) : (
+              baseSales
+                .slice()
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .slice(0, 10)
+                .map(sale => {
+                  const isToday = isSameDay(new Date(sale.createdAt), today);
+                  const isYesterday = isSameDay(new Date(sale.createdAt), subDays(today, 1));
+                  const dayLabel = isToday ? 'Hoje' : isYesterday ? 'Ontem' : format(new Date(sale.createdAt), "dd/MM", { locale: ptBR });
+                  return (
+                    <div key={sale.id} className="flex items-center justify-between px-4 py-3">
+                      <div>
+                        <p className="text-sm font-medium">#{sale.id.slice(-6).toUpperCase()}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {dayLabel} · {format(new Date(sale.createdAt), "HH:mm")} · {sale.items.length} {sale.items.length === 1 ? 'item' : 'itens'}
+                        </p>
+                      </div>
+                      <span className="font-bold text-primary">{formatCurrency(parseFloat(sale.total))}</span>
+                    </div>
+                  );
+                })
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* DESKTOP: cabeçalho normal */}
+      <div className="hidden md:flex md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-heading font-bold text-foreground">Relatórios</h1>
           <p className="text-muted-foreground">Análise detalhada de vendas e desempenho.</p>
@@ -221,7 +295,7 @@ export default function Reports() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="hidden md:grid md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Receita Total</CardTitle>
@@ -251,7 +325,7 @@ export default function Reports() {
         </Card>
       </div>
 
-      <Tabs defaultValue="graficos" className="space-y-4">
+      <Tabs defaultValue="graficos" className="hidden md:block space-y-4">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="graficos">Gráficos</TabsTrigger>
           <TabsTrigger value="vendedores" className="gap-1"><Users className="h-4 w-4" /> Performance</TabsTrigger>
