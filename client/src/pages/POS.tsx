@@ -544,30 +544,33 @@ export default function POS() {
                       </div>
                     </div>
 
-                    {/* Controlos — centrados verticalmente */}
-                    <div className="flex items-center self-center shrink-0 pr-2 gap-1" onClick={e => e.stopPropagation()}>
-                      {cartItem && (
-                        <>
-                          <button
-                            type="button"
-                            className="h-7 w-7 rounded-full bg-red-500 flex items-center justify-center transition-colors active:scale-95"
-                            onClick={() => handleQuantityChange(product.id, -1)}
-                            data-testid={`button-decrease-list-${product.id}`}
-                          >
-                            <Minus className="h-3 w-3 text-white" />
-                          </button>
-                          <span className="w-6 text-center text-xs font-bold text-emerald-700 tabular-nums">{qty}</span>
-                        </>
-                      )}
-                      <button
-                        type="button"
-                        className="h-7 w-7 rounded-full bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center transition-colors active:scale-95 disabled:opacity-40"
-                        onClick={(e) => { e.stopPropagation(); if (parsedStock > 0) handleAddProduct(product); }}
-                        disabled={parsedStock <= 0}
-                        data-testid={`button-add-${product.id}`}
-                      >
-                        <Plus className="h-3 w-3 text-white" />
-                      </button>
+                    {/* Controlos + Est por baixo */}
+                    <div className="flex flex-col items-center self-center shrink-0 pr-2 gap-0.5 w-[72px]" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center justify-end w-full gap-1">
+                        {cartItem && (
+                          <>
+                            <button
+                              type="button"
+                              className="h-7 w-7 rounded-full bg-red-500 flex items-center justify-center transition-colors active:scale-95"
+                              onClick={() => handleQuantityChange(product.id, -1)}
+                              data-testid={`button-decrease-list-${product.id}`}
+                            >
+                              <Minus className="h-3 w-3 text-white" />
+                            </button>
+                            <span className="w-5 text-center text-xs font-bold text-emerald-700 tabular-nums">{qty}</span>
+                          </>
+                        )}
+                        <button
+                          type="button"
+                          className="h-7 w-7 rounded-full bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center transition-colors active:scale-95 disabled:opacity-40 shrink-0"
+                          onClick={(e) => { e.stopPropagation(); if (parsedStock > 0) handleAddProduct(product); }}
+                          disabled={parsedStock <= 0}
+                          data-testid={`button-add-${product.id}`}
+                        >
+                          <Plus className="h-3 w-3 text-white" />
+                        </button>
+                      </div>
+                      <span className="text-[9px] text-muted-foreground text-center w-full">Est: {parsedStock.toFixed(product.unit === 'kg' ? 3 : 0)}</span>
                     </div>
                   </div>
                 );
