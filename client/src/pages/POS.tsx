@@ -546,16 +546,19 @@ export default function POS() {
 
                     {/* Controlos — centrados verticalmente */}
                     <div className="flex items-center self-center shrink-0 pr-2 gap-1" onClick={e => e.stopPropagation()}>
-                      <button
-                        type="button"
-                        className={`h-7 w-7 rounded-full flex items-center justify-center transition-colors active:scale-95 ${cartItem ? 'bg-red-500' : 'bg-gray-200'}`}
-                        onClick={() => cartItem && handleQuantityChange(product.id, -1)}
-                        disabled={!cartItem || parsedStock <= 0}
-                        data-testid={`button-decrease-list-${product.id}`}
-                      >
-                        <Minus className="h-3 w-3 text-white" />
-                      </button>
-                      <span className="w-6 text-center text-xs font-bold text-gray-800 tabular-nums">{qty}</span>
+                      {cartItem && (
+                        <>
+                          <button
+                            type="button"
+                            className="h-7 w-7 rounded-full bg-red-500 flex items-center justify-center transition-colors active:scale-95"
+                            onClick={() => handleQuantityChange(product.id, -1)}
+                            data-testid={`button-decrease-list-${product.id}`}
+                          >
+                            <Minus className="h-3 w-3 text-white" />
+                          </button>
+                          <span className="w-6 text-center text-xs font-bold text-emerald-700 tabular-nums">{qty}</span>
+                        </>
+                      )}
                       <button
                         type="button"
                         className="h-7 w-7 rounded-full bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center transition-colors active:scale-95 disabled:opacity-40"

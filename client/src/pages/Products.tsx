@@ -8,8 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Plus, FileDown, FileUp, AlertTriangle, Pencil, Trash2, AlertCircle, ArrowUp, ScanLine } from 'lucide-react';
-import { BarcodeScanner } from '@/components/BarcodeScanner';
+import { Search, Plus, FileDown, FileUp, AlertTriangle, Pencil, Trash2, AlertCircle, ArrowUp, Camera } from 'lucide-react';
+import { BarcodeCameraScan } from '@/components/BarcodeCameraScan';
 import { formatCurrency } from '@/lib/utils';
 import { Product, productsApi, categoriesApi, systemApi } from '@/lib/api';
 import * as XLSX from 'xlsx';
@@ -44,6 +44,7 @@ export default function Products() {
   const [newProduct, setNewProduct] = useState({
     name: '',
     sku: '',
+    barcode: '',
     price: '',
     costPrice: '',
     stock: '',
@@ -59,7 +60,7 @@ export default function Products() {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/system/edit-count'] });
       setIsAddOpen(false);
-      setNewProduct({ name: '', sku: '', price: '', costPrice: '', stock: '', unit: 'un', categoryId: '', minStock: '5', image: '' });
+      setNewProduct({ name: '', sku: '', barcode: '', price: '', costPrice: '', stock: '', unit: 'un', categoryId: '', minStock: '5', image: '' });
       toast({ title: "Sucesso", description: "Produto cadastrado!" });
     },
     onError: (error: Error) => {
@@ -108,7 +109,7 @@ export default function Products() {
   const [increasePrice, setIncreasePrice] = useState('');
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [scannerForField, setScannerForField] = useState<'new' | 'edit' | null>(null);
+  const [barcodeScanOpen, setBarcodeScanOpen] = useState<'add' | 'edit' | null>(null);
 
   const increaseStockMutation = useMutation({
     mutationFn: ({ id, quantity, price }: { id: string; quantity: number; price?: number }) => 
@@ -229,7 +230,7 @@ export default function Products() {
     
     createProductMutation.mutate({
       name: newProduct.name,
-      sku: newProduct.sku || `SKU-${Date.now()}`,
+      sku: newProduct.sku || newProduct.barcode || `SKU-${Date.now()}`,
       categoryId: newProduct.categoryId || categories[0]?.id || null,
       price: newProduct.price,
       costPrice: newProduct.costPrice || '0',
@@ -274,7 +275,7 @@ export default function Products() {
       id: editingProduct.id,
       data: {
         name: editingProduct.name,
-        sku: editingProduct.sku,
+        sku: editingProduct.sku || (editingProduct as any).barcode || `SKU-${Date.now()}`,
         price: editingProduct.price,
         costPrice: editingProduct.costPrice,
         stock: editingProduct.stock,
@@ -347,24 +348,35 @@ export default function Products() {
                   </div>
                   <div className="grid gap-2">
                     <Label>Código (SKU)</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        value={newProduct.sku}
-                        onChange={e => setNewProduct({...newProduct, sku: e.target.value})}
-                        placeholder="Gerado automaticamente se vazio"
-                        data-testid="input-product-sku"
-                        className="flex-1"
-                      />
-                      <button
-                        type="button"
-                        className="h-10 w-10 rounded-lg bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center shrink-0 transition-colors"
-                        onClick={() => setScannerForField('new')}
-                        title="Scan código de barras"
-                      >
-                        <ScanLine className="h-4 w-4 text-white" />
-                      </button>
-                    </div>
+                    <Input
+                      value={newProduct.sku}
+                      onChange={e => setNewProduct({...newProduct, sku: e.target.value})}
+                      placeholder="Gerado automaticamente se vazio"
+                      data-testid="input-product-sku"
+                    />
                   </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Código de Barras (opcional — escanear ou digitar)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={newProduct.barcode}
+                      onChange={e => setNewProduct({...newProduct, barcode: e.target.value})}
+                      placeholder="EAN-13, UPC — ou use o botão para escanear"
+                      data-testid="input-product-barcode"
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setBarcodeScanOpen('add')}
+                      title="Escanear código de barras"
+                    >
+                      <Camera className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Pode registar barcode, SKU ou ambos. Se vazio, o sistema gera automaticamente — ambos servem para venda com scanner.</p>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -547,23 +559,34 @@ export default function Products() {
                 </div>
                 <div className="grid gap-2">
                   <Label>Código (SKU)</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={editingProduct.sku}
-                      onChange={e => setEditingProduct({...editingProduct, sku: e.target.value})}
-                      data-testid="input-edit-product-sku"
-                      className="flex-1"
-                    />
-                    <button
-                      type="button"
-                      className="h-10 w-10 rounded-lg bg-emerald-500 hover:bg-emerald-600 flex items-center justify-center shrink-0 transition-colors"
-                      onClick={() => setScannerForField('edit')}
-                      title="Scan código de barras"
-                    >
-                      <ScanLine className="h-4 w-4 text-white" />
-                    </button>
-                  </div>
+                  <Input
+                    value={editingProduct.sku}
+                    onChange={e => setEditingProduct({...editingProduct, sku: e.target.value})}
+                    data-testid="input-edit-product-sku"
+                  />
                 </div>
+              </div>
+              <div className="grid gap-2">
+                <Label>Código de Barras (opcional — escanear ou digitar)</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={(editingProduct as any).barcode || ''}
+                    onChange={e => setEditingProduct({...editingProduct, barcode: e.target.value} as any)}
+                    placeholder="EAN-13, UPC — ou use o botão para escanear"
+                    data-testid="input-edit-product-barcode"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setBarcodeScanOpen('edit')}
+                    title="Escanear código de barras"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">Pode registar barcode, SKU ou ambos — ambos servem para venda com scanner.</p>
               </div>
 
               <div className="grid grid-cols-3 gap-4">
@@ -826,19 +849,25 @@ export default function Products() {
         </CardContent>
       </Card>
 
-      {scannerForField && (
-        <BarcodeScanner
-          onScan={(code) => {
-            if (scannerForField === 'new') {
-              setNewProduct(p => ({ ...p, sku: code }));
-            } else if (scannerForField === 'edit' && editingProduct) {
-              setEditingProduct(p => p ? { ...p, sku: code } : p);
-            }
-            setScannerForField(null);
-          }}
-          onClose={() => setScannerForField(null)}
-        />
-      )}
+      <Dialog open={!!barcodeScanOpen} onOpenChange={(o) => !o && setBarcodeScanOpen(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Ler código de barras</DialogTitle>
+          </DialogHeader>
+          <BarcodeCameraScan
+            id="products-barcode-scan"
+            onScan={(code) => {
+              if (barcodeScanOpen === 'add') {
+                setNewProduct(p => ({ ...p, barcode: code, sku: p.sku || code }));
+              } else if (barcodeScanOpen === 'edit' && editingProduct) {
+                setEditingProduct({ ...editingProduct, barcode: code } as any);
+              }
+              setBarcodeScanOpen(null);
+            }}
+            onClose={() => setBarcodeScanOpen(null)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
