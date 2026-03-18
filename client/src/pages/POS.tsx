@@ -542,9 +542,6 @@ export default function POS() {
                         <span className="text-[9px] text-gray-400 shrink-0">/{product.unit}</span>
                         {product.unit === 'kg' && <Scale className="h-2.5 w-2.5 text-emerald-500 shrink-0" />}
                       </div>
-                      <span className="text-[9px] text-emerald-600 font-medium mt-0.5">
-                        Est: {parsedStock.toFixed(product.unit === 'kg' ? 1 : 0)} {product.unit}
-                      </span>
                     </div>
 
                     {/* Controlos — centrados verticalmente */}
@@ -1228,7 +1225,7 @@ function RemoteScannerDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="w-full max-w-sm sm:max-w-lg mx-auto rounded-2xl p-0 overflow-hidden"
+        className="w-full max-w-sm sm:max-w-lg mx-auto rounded-2xl p-0 overflow-hidden flex flex-col"
         aria-describedby="remote-scanner-desc"
       >
         {/* Header */}
@@ -1255,28 +1252,34 @@ function RemoteScannerDialog({
           )}
         </div>
 
-        {/* Body */}
-        <div className="px-5 py-4 space-y-4">
+        {/* Body — scroll horizontal quando a tela for pequena */}
+        <div className="overflow-x-auto">
+        <div className="px-5 py-4 space-y-4 min-w-[360px]">
           {(token && url) ? (
             <div className="space-y-3">
               {url.startsWith('http://') && (
                 <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl px-3 py-2.5">
                   <span className="text-amber-500 text-base leading-none mt-0.5">⚠</span>
-                  <p className="text-xs text-amber-700 dark:text-amber-400">
-                    Para a câmera funcionar, use HTTPS. Adicione <code className="font-mono bg-amber-100 dark:bg-amber-900 px-1 rounded">HTTPS=1</code> ao .env e reinicie.
-                  </p>
+                  <div className="overflow-x-auto">
+                    <p className="text-xs text-amber-700 dark:text-amber-400 whitespace-nowrap">
+                      Para a câmera funcionar, use HTTPS. Adicione <code className="font-mono bg-amber-100 dark:bg-amber-900 px-1 rounded">HTTPS=1</code> ao .env e reinicie.
+                    </p>
+                  </div>
                 </div>
               )}
 
-              {/* Link box */}
+              {/* Link box — scroll horizontal no URL */}
               <div className="bg-muted/50 border rounded-xl p-3 space-y-2">
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Link do scanner</p>
-                <div className="flex gap-2">
-                  <Input
-                    readOnly
-                    value={url}
-                    className="font-mono text-xs h-10 bg-background"
-                  />
+                <div className="flex gap-2 items-center">
+                  <div
+                    className="flex-1 overflow-x-auto cursor-grab active:cursor-grabbing rounded-lg select-text"
+                    style={{ WebkitOverflowScrolling: 'touch' }}
+                  >
+                    <p className="font-mono text-xs text-foreground bg-background border rounded-lg px-3 py-2.5 whitespace-nowrap min-w-0">
+                      {url}
+                    </p>
+                  </div>
                   <Button
                     size="sm"
                     variant="outline"
@@ -1288,14 +1291,9 @@ function RemoteScannerDialog({
                 </div>
               </div>
 
-              {/* Action buttons — full width on mobile */}
+              {/* Action buttons */}
               <div className="grid grid-cols-2 gap-2">
-                <Button
-                  variant="secondary"
-                  className="h-11 text-sm font-medium"
-                  onClick={handleRenew}
-                  disabled={renewing}
-                >
+                <Button variant="secondary" className="h-11 text-sm font-medium" onClick={handleRenew} disabled={renewing}>
                   <RefreshCw className={cn("h-4 w-4 mr-2", renewing && "animate-spin")} />
                   Renovar (2h)
                 </Button>
@@ -1316,7 +1314,7 @@ function RemoteScannerDialog({
             </Button>
           )}
 
-          {/* Sessions */}
+          {/* Sessions — scroll horizontal em cada linha */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-semibold">Sessões ativas</p>
@@ -1332,19 +1330,21 @@ function RemoteScannerDialog({
                 <p className="text-xs">Nenhuma sessão ativa.</p>
               </div>
             ) : (
-              <ScrollArea className="max-h-44 rounded-xl border">
-                <div className="p-2 space-y-1.5">
-                  {sessions.map((s) => (
-                    <div key={s.token} className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg bg-muted/40">
-                      <div className="flex items-center gap-2 min-w-0">
+              <div className="max-h-44 overflow-y-auto rounded-xl border divide-y">
+                {sessions.map((s) => (
+                  <div
+                    key={s.token}
+                    className="overflow-x-auto cursor-grab active:cursor-grabbing"
+                    style={{ WebkitOverflowScrolling: 'touch' }}
+                  >
+                    <div className="flex items-center justify-between gap-4 px-3 py-2.5 bg-muted/40 min-w-max">
+                      <div className="flex items-center gap-2">
                         {s.deviceType === 'mobile'
                           ? <Smartphone className="h-4 w-4 shrink-0 text-emerald-500" />
                           : <Monitor className="h-4 w-4 shrink-0 text-amber-500" />}
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate" title={s.userAgent}>{formatDeviceLabel(s)}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Há {formatTimeAgo(Date.now() - s.lastAccess)}
-                          </p>
+                        <div>
+                          <p className="text-sm font-medium whitespace-nowrap">{formatDeviceLabel(s)}</p>
+                          <p className="text-xs text-muted-foreground whitespace-nowrap">Há {formatTimeAgo(Date.now() - s.lastAccess)} · renova a cada ping</p>
                         </div>
                       </div>
                       <Button
@@ -1357,15 +1357,16 @@ function RemoteScannerDialog({
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 
           <p className="text-xs text-muted-foreground text-center pb-1">
             Códigos escaneados são adicionados automaticamente ao carrinho. Revogue sessões suspeitas.
           </p>
+        </div>
         </div>
       </DialogContent>
     </Dialog>
